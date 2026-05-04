@@ -111,7 +111,7 @@ Este proyecto utilizó **Claude (Anthropic)** como guía metodológica mediante 
 
 La documentación detallada del proceso analítico, incluyendo errores identificados, decisiones metodológicas y aprendizajes, está disponible en:
 
-📄 [Ver documentación completa](documentacion/caso_de_estudio_completo.md)
+📄 [Ver documentación completa](Documentacion de proyecto)
 
 ---
 
