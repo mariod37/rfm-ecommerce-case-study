@@ -111,7 +111,7 @@ Este proyecto utilizó **Claude (Anthropic)** como guía metodológica mediante 
 
 La documentación detallada del proceso analítico, incluyendo errores identificados, decisiones metodológicas y aprendizajes, está disponible en:
 
-📄 [Ver documentación completa](Documentacion de proyecto)
+📄 [Ver documentación completa](https://github.com/mariod37/rfm-ecommerce-case-study/commit/13b0f1f574c09853212b14ef5e6c5aff9ad3b81f)
 
 ---
 
