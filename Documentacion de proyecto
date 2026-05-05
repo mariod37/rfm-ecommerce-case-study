@@ -1,541 +1,355 @@
-## 📊 Caso de Estudio — thelook_ecommerce
+Aquí está el documento completo actualizado con los tres puntos incorporados:
 
-#### Proyecto: `projecto-curseradata.case_study`
+📊 Caso de Estudio — thelook_ecommerce
+Proyecto: projecto-curseradata.case_study
 
----
+FASE ASK
+Pregunta de negocio:
 
-### FASE ASK
+¿Qué factores determinan la fidelidad de un cliente?
 
-**Pregunta de negocio:**
+Objetivo: Identificar patrones de fidelidad de clientes midiendo frecuencia de compra, valor monetario, recencia, productos preferidos, distribución por género y mercados más relevantes.
+Métricas clave:
 
-> ¿Qué factores determinan la fidelidad de un cliente?
+R — Recencia: fecha de última compra (MAX(created_at))
+F — Frecuencia: cantidad de órdenes por cliente (COUNT(order_id))
+M — Monetario: gasto total por cliente (SUM(sale_price))
+Período: último año desde created_at
+Solo pedidos con status Complete
 
-**Objetivo:** Identificar patrones de fidelidad de clientes midiendo frecuencia de compra, valor monetario, recencia, productos preferidos, distribución por género y mercados más relevantes.
+Tablas identificadas: orders, order_items, products, users
 
-**Métricas clave:**
+FASE PREPARE
+Tablas disponibles en el dataset:
 
-- **R — Recencia:** fecha de última compra (`MAX(created_at)`)
-- **F — Frecuencia:** cantidad de órdenes por cliente (`COUNT(order_id)`)
-- **M — Monetario:** gasto total por cliente (`SUM(sale_price)`)
-- Período: último año desde `created_at`
-- Solo pedidos con status `Complete`
+orders — pedidos y fechas
+order_items — detalle de productos por pedido
+products — catálogo de productos
+users — perfil de clientes
 
-**Tablas identificadas:** `orders`, `order_items`, `products`, `users`
 
----
+📌 Diagrama de relaciones (ERD): Ver archivo assets/erd_thelook.png en el repositorio.
 
-### FASE PREPARE
 
-**Tablas disponibles en el dataset:**
+FASE PROCESS — Documentación completa
+Decisión de limpieza
+Se optó por limpieza in-query sin crear tablas intermedias por tres motivos:
 
-- `orders` — pedidos y fechas
-- `order_items` — detalle de productos por pedido
-- `products` — catálogo de productos
-- `users` — perfil de clientes
+Dataset público sin permisos de escritura
+Solo se limpian las tablas que responden la pregunta de negocio
+Garantiza trazabilidad y documentación reproducible
 
----
 
-### FASE PROCESS — Documentación completa
+Verificación de calidad de datos
+Tabla orders
+Valores nulos — columnas críticas
+ColumnaValores nulosorder_id0user_id0status0created_at0
+Tipos de datos
+ColumnaTipoEstadocreated_atTIMESTAMP✅ CorrectostatusSTRING✅ Valor clave identificado: 'Complete'
+Tablas order_items y products
+Tipos de datos en columnas de precios
+TablaColumnaTipoEstadoproductscostFLOAT✅ Correctoorder_itemssale_priceFLOAT✅ Correcto
+Compatibilidad de claves para JOIN
+TablaColumnaTipoEstadoproductsidINTEGER✅ Compatibleorder_itemsproduct_idINTEGER✅ Compatible
 
-#### Decisión de limpieza
+Conclusiones
 
-Se optó por limpieza **in-query** sin crear tablas intermedias por tres motivos:
+Las columnas críticas no presentan valores nulos
+Las fechas están en formato TIMESTAMP, sin inconsistencias
+Los tipos de datos en precios son consistentes entre tablas
+Las claves de JOIN son compatibles, sin riesgo de conflictos
+Los datos están listos para la Fase ANALYZE
 
-- Dataset público sin permisos de escritura
-- Solo se limpian las tablas que responden la pregunta de negocio
-- Garantiza trazabilidad y documentación reproducible
 
----
+FASE ANALYZE — Documentación completa
 
-#### Verificación de calidad de datos
+⚠️ Nota de revisión: El análisis inicial fue revisado en base a feedback técnico externo. Se identificaron mejoras metodológicas importantes. Las queries corregidas se documentan junto a sus versiones originales para transparencia metodológica.
 
-##### Tabla `orders`
 
-**Valores nulos — columnas críticas**
-
-|Columna|Valores nulos|
-|---|---|
-|order_id|0|
-|user_id|0|
-|status|0|
-|created_at|0|
-
-**Tipos de datos**
-
-|Columna|Tipo|Estado|
-|---|---|---|
-|created_at|TIMESTAMP|✅ Correcto|
-|status|STRING|✅ Valor clave identificado: `'Complete'`|
-
-##### Tablas `order_items` y `products`
-
-**Tipos de datos en columnas de precios**
-
-|Tabla|Columna|Tipo|Estado|
-|---|---|---|---|
-|products|cost|FLOAT|✅ Correcto|
-|order_items|sale_price|FLOAT|✅ Correcto|
-
-**Compatibilidad de claves para JOIN**
-
-|Tabla|Columna|Tipo|Estado|
-|---|---|---|---|
-|products|id|INTEGER|✅ Compatible|
-|order_items|product_id|INTEGER|✅ Compatible|
-
----
-
-#### Conclusiones
-
-- Las columnas críticas no presentan valores nulos
-- Las fechas están en formato `TIMESTAMP`, sin inconsistencias
-- Los tipos de datos en precios son consistentes entre tablas
-- Las claves de JOIN son compatibles, sin riesgo de conflictos
-- **Los datos están listos para la Fase ANALYZE**
-
----
-
-### FASE ANALYZE — Documentación completa
-
-> ⚠️ **Nota de revisión:** El análisis inicial fue revisado en base a feedback técnico externo. Se identificaron mejoras metodológicas importantes. Las queries corregidas se documentan junto a sus versiones originales para transparencia metodológica.
-
----
-
-#### KPIs Generales
-
-**Pregunta:** ¿Cuál es el estado general del negocio en el período analizado?
-
-sql
-
-```sql
-SELECT COUNT(DISTINCT user_id) AS cantidad_usuarios_general,
+KPIs Generales
+Pregunta: ¿Cuál es el estado general del negocio en el período analizado?
+sqlSELECT COUNT(DISTINCT user_id) AS cantidad_usuarios_general,
 COUNT(order_id) AS cantidad_general,
 AVG(sale_price) AS promedio_general,
 SUM(sale_price) AS revenue_general
-FROM `case_study.order_items`
+FROM `projecto-curseradata.case_study.order_items`
 WHERE status = 'Complete'
 AND created_at >= '2024-01-01';
-```
+Clientes únicosTotal órdenesTicket promedioRevenue total19.29730.86859.961.850.944,24
 
-|Clientes únicos|Total órdenes|Ticket promedio|Revenue total|
-|---|---|---|---|
-|19.297|30.868|59.96|1.850.944,24|
-
----
-
-#### Query 1 — Frecuencia de compras por cliente
-
-**Pregunta:** ¿Cuántas compras realizó cada cliente en el último año?
-
-sql
-
-```sql
-SELECT user_id, COUNT(user_id) AS cantidad_de_compras
-FROM `projecto-curseradata.case_study.orders`
-WHERE status = 'Complete'
-  AND created_at >= '2024-01-01'
-GROUP BY user_id
+Query 1 — Frecuencia de compras por cliente
+Pregunta: ¿Cuántas compras realizó cada cliente en el último año?
+sqlSELECT o.user_id, COUNT(DISTINCT o.order_id) AS cantidad_de_compras
+FROM `projecto-curseradata.case_study.orders` o
+WHERE o.status = 'Complete'
+  AND o.created_at >= '2024-01-01'
+GROUP BY o.user_id
 ORDER BY cantidad_de_compras DESC;
-```
+Hallazgo: Los clientes con mayor frecuencia de compra realizaron hasta 4 órdenes en el último año.
 
-**Hallazgo:** Los clientes con mayor frecuencia de compra realizaron hasta 4 órdenes en el último año.
+⚠️ Limitación identificada: Esta query mide únicamente la dimensión F (Frecuencia) del modelo RFM. No considera recencia ni valor monetario, lo que puede sobrestimar la fidelidad de clientes con compras de bajo valor. Ver Query RFM para análisis completo.
 
-> ⚠️ **Limitación identificada:** Esta query mide únicamente la dimensión F (Frecuencia) del modelo RFM. No considera recencia ni valor monetario, lo que puede sobrestimar la fidelidad de clientes con compras de bajo valor. Ver Query RFM para análisis completo.
 
----
-
-#### Query RFM — Modelo de fidelidad completo ✅
-
-**Pregunta:** ¿Cómo se miden las tres dimensiones de fidelidad por cliente?
-
-sql
-
-```sql
-SELECT o.user_id,
+Query RFM — Modelo de fidelidad completo ✅
+Pregunta: ¿Cómo se miden las tres dimensiones de fidelidad por cliente?
+sqlSELECT o.user_id,
 MAX(o.created_at) AS recencia,
 COUNT(DISTINCT o.order_id) AS frecuencia,
-SUM(i.sale_price) AS monetario
+SUM(oi.sale_price) AS monetario
 FROM `projecto-curseradata.case_study.orders` o
-INNER JOIN `projecto-curseradata.case_study.order_items` i ON o.order_id = i.order_id
-WHERE i.status = 'Complete'
+INNER JOIN `projecto-curseradata.case_study.order_items` oi ON o.order_id = oi.order_id
+WHERE oi.status = 'Complete'
 AND o.created_at >= '2024-01-01'
 GROUP BY o.user_id
 ORDER BY frecuencia DESC;
-```
+Hallazgo: Dentro de los clientes que han comprado en el último año existen diferencias significativas entre quienes tienen la misma frecuencia. Ejemplo: cliente 96313 con su última compra hace casi un año, y gastos que varían desde $198.96 hasta $1005.79 entre clientes con igual frecuencia. Esto implica que debe observarse la Frecuencia y que esta sea coherente con Recencia y en especial con valor Monetario.
 
-**Hallazgo:** Dentro de los clientes que han comprado en el último año existen diferencias significativas entre quienes tienen la misma frecuencia. Ejemplo: cliente 96313 con su última compra hace casi un año, y gastos que varían desde $198.96 hasta $1005.79 entre clientes con igual frecuencia. Esto implica que debe observarse la Frecuencia y que esta sea coherente con Recencia y en especial con valor Monetario.
+⚠️ Limitación identificada: La query calcula las tres métricas pero falta segmentación para filtrar en base a sus respectivos valores e identificar clientes fieles. Ver Query de Segmentación RFM.
 
-> ⚠️ **Limitación identificada:** La query calcula las tres métricas pero falta segmentación para filtrar en base a sus respectivos valores e identificar clientes fieles. Ver Query de Segmentación RFM.
 
----
+Query Segmentación RFM ✅
+Pregunta: ¿Quiénes son los clientes verdaderamente fieles aplicando los tres criterios simultáneamente?
+Criterios definidos — Tier 1 (Champions):
 
-#### Query Segmentación RFM ✅
+R: última compra hace 60 días o menos
+F: 4 o más órdenes
+M: gasto total superior al ticket promedio general ($59.96)
 
-**Pregunta:** ¿Quiénes son los clientes verdaderamente fieles aplicando los tres criterios simultáneamente?
 
-**Criterios definidos:**
+💡 Nota metodológica: Los umbrales aplicados son estrictos para un e-commerce de indumentaria general, donde 2 o 3 compras anuales ya representa una buena retención. El resultado del 0.03% debe interpretarse en ese contexto. Ver sección Trabajo Futuro para propuesta de niveles de fidelidad (Tier 1, 2 y 3) con umbrales relajados.
 
-- **R:** última compra hace 60 días o menos
-- **F:** 4 o más órdenes
-- **M:** gasto total superior al ticket promedio general ($59.96)
-
-sql
-
-```sql
-SELECT o.user_id,
+sqlSELECT o.user_id,
 MAX(o.created_at) AS recencia,
 COUNT(DISTINCT o.order_id) AS frecuencia,
-SUM(i.sale_price) AS monetario
+SUM(oi.sale_price) AS monetario
 FROM `projecto-curseradata.case_study.orders` o
-INNER JOIN `projecto-curseradata.case_study.order_items` i ON o.order_id = i.order_id
-WHERE i.status = 'Complete'
+INNER JOIN `projecto-curseradata.case_study.order_items` oi ON o.order_id = oi.order_id
+WHERE oi.status = 'Complete'
 AND o.created_at >= '2024-01-01'
 GROUP BY o.user_id
-HAVING frecuencia >= 4
-AND monetario > 59.96
+HAVING COUNT(DISTINCT o.order_id) >= 4
+AND SUM(oi.sale_price) > 59.96
 AND DATE_DIFF(CURRENT_DATE(), DATE(MAX(o.created_at)), DAY) <= 60;
-```
+usuariorecenciafrecuenciamonetario691122026-04-104367.72254152026-03-254220.43991702026-03-224648.01428352026-04-104276.70784052026-03-184538.90
+Hallazgo: El análisis multidimensional demostró que solo el 0.03% de los clientes (5 de 19.297) son considerados clientes fieles aplicando los tres criterios RFM simultáneamente. El negocio tiene un problema serio de retención.
+Hallazgo adicional por género: De los 5 clientes fieles, 3 son mujeres con un ticket total de $1.291, mientras que los 2 hombres tienen un ticket total de $758. Aunque el análisis general muestra que el género masculino tiene un ticket promedio 11% mayor, entre los clientes fieles las mujeres dominan tanto en cantidad como en monetario total.
 
-|usuario|recencia|frecuencia|monetario|
-|---|---|---|---|
-|69112|2026-04-10|4|367.72|
-|25415|2026-03-25|4|220.43|
-|99170|2026-03-22|4|648.01|
-|42835|2026-04-10|4|276.70|
-|78405|2026-03-18|4|538.90|
-
-**Hallazgo:** El análisis multidimensional demostró que solo el 0.03% de los clientes (5 de 19.297) son considerados clientes fieles aplicando los tres criterios RFM simultáneamente. El negocio tiene un problema serio de retención.
-
-**Hallazgo adicional por género:** De los 5 clientes fieles, 3 son mujeres con un ticket total de $1.291, mientras que los 2 hombres tienen un ticket total de $758. Aunque el análisis general muestra que el género masculino tiene un ticket promedio 11% mayor, entre los clientes fieles las mujeres dominan tanto en cantidad como en monetario total.
-
----
-
-#### Query Marcas de clientes fieles ✅
-
-**Pregunta:** ¿Qué marcas compran los clientes fieles? ¿Existe un patrón?
-
-sql
-
-```sql
-SELECT o.user_id, COUNT(DISTINCT o.order_id) AS cantidad, p.brand
-FROM `projecto-curseradata.case_study.order_items` o
-INNER JOIN `projecto-curseradata.case_study.products` p ON o.product_id = p.id
-WHERE o.user_id IN (69112, 25415, 99170, 42835, 78405)
-GROUP BY o.user_id, p.brand
+Query Marcas de clientes fieles ✅
+Pregunta: ¿Qué marcas compran los clientes fieles? ¿Existe un patrón?
+sqlSELECT oi.user_id, COUNT(DISTINCT oi.order_id) AS cantidad, p.brand
+FROM `projecto-curseradata.case_study.order_items` oi
+INNER JOIN `projecto-curseradata.case_study.products` p ON oi.product_id = p.id
+WHERE oi.user_id IN (69112, 25415, 99170, 42835, 78405)
+GROUP BY oi.user_id, p.brand
 ORDER BY cantidad DESC;
-```
+Hallazgo: Los clientes fieles compran marcas muy variadas. Allegra K es la única marca que aparece en más de un cliente fiel. No existe lealtad a una marca específica sino a la plataforma en general. Esto abre una oportunidad estratégica de fidelización a nivel de plataforma.
 
-**Hallazgo:** Los clientes fieles compran marcas muy variadas. Allegra K es la única marca que aparece en más de un cliente fiel. No existe lealtad a una marca específica sino a la plataforma en general. Esto abre una oportunidad estratégica de fidelización a nivel de plataforma.
-
----
-
-#### Query 2 — Productos más vendidos en general
-
-**Pregunta:** ¿Cuáles son los productos más vendidos en general?
-
-sql
-
-```sql
-SELECT COUNT(o.order_id) AS cantidad, o.product_id, p.name, p.category  
-FROM `projecto-curseradata.case_study.order_items` o
-INNER JOIN `projecto-curseradata.case_study.products` p ON o.product_id = p.id
-GROUP BY o.product_id, p.name, p.category
+Query 2 — Productos más vendidos en general
+Pregunta: ¿Cuáles son los productos más vendidos en general?
+sqlSELECT COUNT(oi.order_id) AS cantidad, oi.product_id, p.name, p.category  
+FROM `projecto-curseradata.case_study.order_items` oi
+INNER JOIN `projecto-curseradata.case_study.products` p ON oi.product_id = p.id
+GROUP BY oi.product_id, p.name, p.category
 ORDER BY cantidad DESC;
-```
+Hallazgo: El top 10 está dominado por ropa de uso diario: ropa interior, jeans, abrigos y remeras.
+Insight: Las prendas de uso cotidiano tienen alta frecuencia de recompra por desgaste natural.
 
-**Hallazgo:** El top 10 está dominado por ropa de uso diario: ropa interior, jeans, abrigos y remeras.
+Query 3 — Productos preferidos por clientes fieles
+Versión 1 — Error conceptual identificado
+sqlSELECT COUNT(oi.order_id) AS cantidad, oi.product_id, p.name, p.category
+FROM `projecto-curseradata.case_study.order_items` oi
+INNER JOIN `projecto-curseradata.case_study.products` p ON oi.product_id = p.id
+INNER JOIN `projecto-curseradata.case_study.orders` o ON oi.order_id = o.order_id
+WHERE o.status = 'Complete'
+  AND o.created_at >= '2024-01-01'
+GROUP BY oi.product_id, p.name, p.category
+HAVING COUNT(oi.order_id) >= 4;
 
-**Insight:** Las prendas de uso cotidiano tienen alta frecuencia de recompra por desgaste natural.
+⚠️ Error conceptual identificado: El HAVING COUNT(oi.order_id) >= 4 opera a nivel de producto, no de cliente. Identificaba cuántas veces aparecía un producto en order_items, sin importar quién lo compraba. Este es un ejemplo de sesgo de confirmación: el resultado no daba error y parecía coherente, pero no respondía la pregunta correcta.
 
----
-
-#### Query 3 — Productos preferidos por clientes fieles
-
-##### Versión 1 — Error conceptual identificado
-
-sql
-
-```sql
-SELECT COUNT(o.order_id) AS cantidad, o.product_id, p.name, p.category
-FROM `projecto-curseradata.case_study.order_items` o
-INNER JOIN `projecto-curseradata.case_study.products` p ON o.product_id = p.id
-INNER JOIN `projecto-curseradata.case_study.orders` orden ON o.order_id = orden.order_id
-WHERE orden.status = 'Complete'
-  AND orden.created_at >= '2024-01-01'
-GROUP BY o.product_id, p.name, p.category
-HAVING COUNT(o.order_id) >= 4;
-```
-
-> ⚠️ **Error conceptual identificado:** El `HAVING COUNT(o.order_id) >= 4` opera a nivel de producto, no de cliente. Identificaba cuántas veces aparecía un producto en `order_items`, sin importar quién lo compraba. Este es un ejemplo de **sesgo de confirmación**: el resultado no daba error y parecía coherente, pero no respondía la pregunta correcta.
-
-##### Versión 2 — Corregida ✅
-
-sql
-
-```sql
-SELECT COUNT(DISTINCT o.order_id) AS cantidad, o.product_id, p.name, p.category
-FROM `projecto-curseradata.case_study.order_items` o
-INNER JOIN `projecto-curseradata.case_study.products` p ON o.product_id = p.id
-INNER JOIN `projecto-curseradata.case_study.orders` orden ON o.order_id = orden.order_id
-WHERE orden.status = 'Complete'
-  AND orden.created_at >= '2024-01-01'
-  AND o.user_id IN (
-    SELECT orden.user_id
-    FROM `projecto-curseradata.case_study.orders` orden
-    WHERE orden.status = 'Complete'
-    AND orden.created_at >= '2024-01-01'
-    GROUP BY orden.user_id
-    HAVING COUNT(orden.order_id) >= 4
+Versión 2 — Corregida ✅
+sqlSELECT COUNT(DISTINCT oi.order_id) AS cantidad, oi.product_id, p.name, p.category
+FROM `projecto-curseradata.case_study.order_items` oi
+INNER JOIN `projecto-curseradata.case_study.products` p ON oi.product_id = p.id
+INNER JOIN `projecto-curseradata.case_study.orders` o ON oi.order_id = o.order_id
+WHERE o.status = 'Complete'
+  AND o.created_at >= '2024-01-01'
+  AND oi.user_id IN (
+    SELECT o2.user_id
+    FROM `projecto-curseradata.case_study.orders` o2
+    WHERE o2.status = 'Complete'
+    AND o2.created_at >= '2024-01-01'
+    GROUP BY o2.user_id
+    HAVING COUNT(o2.order_id) >= 4
   )
-GROUP BY o.product_id, p.name, p.category
+GROUP BY oi.product_id, p.name, p.category
 ORDER BY cantidad DESC;
-```
+Hallazgo: Los productos preferidos por los clientes fieles no coinciden con los de la versión 1. Categorías dominantes en clientes fieles: Pants, Sleep & Lounge, Maternity, Jumpsuits & Rompers, Intimates, Dresses, Jeans, Accessories, Tops & Tees, Leggings, Blazers & Jackets, Suits, Fashion Hoodies & Sweatshirts.
 
-**Hallazgo:** Los productos preferidos por los clientes fieles no coinciden con los de la versión 1. Categorías dominantes en clientes fieles: Pants, Sleep & Lounge, Maternity, Jumpsuits & Rompers, Intimates, Dresses, Jeans, Accessories, Tops & Tees, Leggings, Blazers & Jackets, Suits, Fashion Hoodies & Sweatshirts.
-
----
-
-#### Query 4 — Análisis de género
-
-**Pregunta:** ¿Qué género realiza más compras y cuál es su comportamiento de gasto?
-
-##### Volumen por género
-
-sql
-
-```sql
-SELECT COUNT(user_id) AS cantidad_de_compras, gender
-FROM `projecto-curseradata.case_study.orders`
-WHERE status = 'Complete'
-  AND created_at >= '2024-01-01'
-GROUP BY gender
+Query 4 — Análisis de género
+Pregunta: ¿Qué género realiza más compras y cuál es su comportamiento de gasto?
+Volumen por género
+sqlSELECT o.gender, COUNT(DISTINCT o.order_id) AS cantidad_de_compras
+FROM `projecto-curseradata.case_study.orders` o
+WHERE o.status = 'Complete'
+  AND o.created_at >= '2024-01-01'
+GROUP BY o.gender
 ORDER BY cantidad_de_compras DESC;
-```
-
-|Género|Cantidad de compras|
-|---|---|
-|M|10.671|
-|F|10.633|
-
-**Hallazgo:** No existe diferencia sustancial en volumen de compras entre géneros.
-
-##### Ticket promedio y frecuencia por género ✅
-
-sql
-
-```sql
-SELECT u.gender, AVG(t.total) AS ticket_promedio, COUNT(DISTINCT o.order_id) AS cantidad_orders
+GéneroCantidad de comprasM10.671F10.633
+Hallazgo: No existe diferencia sustancial en volumen de compras entre géneros.
+Ticket promedio y frecuencia por género ✅
+sqlSELECT u.gender,
+AVG(t.total) AS ticket_promedio,
+COUNT(DISTINCT oi.order_id) AS cantidad_orders
 FROM `projecto-curseradata.case_study.users` u
-INNER JOIN `projecto-curseradata.case_study.order_items` o ON u.id = o.user_id
+INNER JOIN `projecto-curseradata.case_study.order_items` oi ON u.id = oi.user_id
 INNER JOIN (
-  SELECT SUM(ord.sale_price) AS total, order_id
-  FROM `projecto-curseradata.case_study.order_items` ord
-  WHERE ord.status = 'Complete'
-  AND ord.created_at >= '2024-01-01'
-  GROUP BY ord.order_id
-) t ON t.order_id = o.order_id
-WHERE o.status = 'Complete'
-AND o.created_at >= '2024-01-01'
+  SELECT SUM(oi2.sale_price) AS total, oi2.order_id
+  FROM `projecto-curseradata.case_study.order_items` oi2
+  WHERE oi2.status = 'Complete'
+  AND oi2.created_at >= '2024-01-01'
+  GROUP BY oi2.order_id
+) t ON t.order_id = oi.order_id
+WHERE oi.status = 'Complete'
+AND oi.created_at >= '2024-01-01'
 GROUP BY u.gender;
-```
-
-**Hallazgo:** El género masculino presenta un ticket promedio un 11% mayor que el femenino. La diferencia en frecuencia es marginal. Esto no confirma fidelidad por sí solo; hace falta relacionar estas métricas con recencia.
-
-##### Categorías por género ✅
-
-sql
-
-```sql
-SELECT u.gender, p.category, COUNT(o.product_id) AS cantidad
+Hallazgo: El género masculino presenta un ticket promedio un 11% mayor que el femenino. La diferencia en frecuencia es marginal. Esto no confirma fidelidad por sí solo; hace falta relacionar estas métricas con recencia.
+Categorías por género ✅
+sqlSELECT u.gender, p.category, COUNT(oi.product_id) AS cantidad
 FROM `projecto-curseradata.case_study.users` u
-INNER JOIN `projecto-curseradata.case_study.order_items` o ON u.id = o.user_id
-INNER JOIN `projecto-curseradata.case_study.products` p ON p.id = o.product_id
+INNER JOIN `projecto-curseradata.case_study.order_items` oi ON u.id = oi.user_id
+INNER JOIN `projecto-curseradata.case_study.products` p ON p.id = oi.product_id
+WHERE oi.status = 'Complete'
+AND oi.created_at >= '2024-01-01'
+GROUP BY u.gender, p.category
+ORDER BY u.gender, cantidad DESC;
+Hallazgo: Intimates es una categoría relevante para el negocio en género femenino. Las categorías dominantes son distintas entre géneros. Rubro masculino: Underwear, Pants, Tops & Tees. Rubro femenino: Dresses, Maternity, Socks & Hosiery, Tops & Tees. La estrategia de marketing no puede ser la misma para ambos géneros.
+
+Query 5 — Análisis geográfico
+Pregunta: ¿En qué mercados geográficos se concentran los clientes y el revenue?
+Versión original — Solo volumen
+sqlSELECT COUNT(oi.order_id) AS cantidad, oi.product_id, p.name, p.category, u.country
+FROM `projecto-curseradata.case_study.order_items` oi
+INNER JOIN `projecto-curseradata.case_study.products` p ON oi.product_id = p.id
+INNER JOIN `projecto-curseradata.case_study.orders` o ON oi.order_id = o.order_id
+INNER JOIN `projecto-curseradata.case_study.users` u ON u.id = oi.user_id
 WHERE o.status = 'Complete'
-AND o.created_at >= '2024-01-01'
-GROUP BY category, gender
-ORDER BY gender, cantidad DESC;
-```
+  AND o.created_at >= '2024-01-01'
+GROUP BY oi.product_id, p.name, p.category, u.country
+HAVING COUNT(oi.order_id) >= 4;
 
-**Hallazgo:** Intimates es una categoría relevante para el negocio en género femenino. Las categorías dominantes son distintas entre géneros. Rubro masculino: Underwear, Pants, Tops & Tees. Rubro femenino: Dresses, Maternity, Socks & Hosiery, Tops & Tees. La estrategia de marketing no puede ser la misma para ambos géneros.
+⚠️ Limitación identificada: La conclusión sobre China se basó en volumen, no en revenue.
 
----
-
-#### Query 5 — Análisis geográfico
-
-**Pregunta:** ¿En qué mercados geográficos se concentran los clientes y el revenue?
-
-##### Versión original — Solo volumen
-
-sql
-
-```sql
-SELECT COUNT(o.order_id) AS cantidad, o.product_id, p.name, p.category, u.country
-FROM `projecto-curseradata.case_study.order_items` o
-INNER JOIN `projecto-curseradata.case_study.products` p ON o.product_id = p.id
-INNER JOIN `projecto-curseradata.case_study.orders` orden ON o.order_id = orden.order_id
-INNER JOIN `projecto-curseradata.case_study.users` u ON u.id = o.user_id
-WHERE orden.status = 'Complete'
-  AND orden.created_at >= '2024-01-01'
-GROUP BY o.product_id, p.name, p.category, u.country
-HAVING COUNT(o.order_id) >= 4;
-```
-
-> ⚠️ **Limitación identificada:** La conclusión sobre China se basó en volumen, no en revenue.
-
-##### Revenue y ticket promedio por país ✅
-
-sql
-
-```sql
-SELECT u.country, SUM(o.sale_price) AS total, AVG(o.sale_price) AS promedio, COUNT(DISTINCT o.order_id) AS cantidad
-FROM `projecto-curseradata.case_study.order_items` o
-INNER JOIN `projecto-curseradata.case_study.users` u ON o.user_id = u.id
-WHERE o.status = 'Complete'
-AND o.created_at >= '2024-01-01'
+Revenue y ticket promedio por país ✅
+sqlSELECT u.country,
+SUM(oi.sale_price) AS total,
+AVG(oi.sale_price) AS promedio,
+COUNT(DISTINCT oi.order_id) AS cantidad
+FROM `projecto-curseradata.case_study.order_items` oi
+INNER JOIN `projecto-curseradata.case_study.users` u ON oi.user_id = u.id
+WHERE oi.status = 'Complete'
+AND oi.created_at >= '2024-01-01'
 GROUP BY u.country
 ORDER BY total DESC;
-```
+Hallazgo: China es el mayor mercado en revenue total. Sin embargo, varios países del top 10 presentan ticket promedio mayor: Australia (65.26), United Kingdom (64.67), South Korea (60.82), Spain (60.53), Brasil (60.22), France (59.92). Conclusión: volumen alto no equivale a mayor rentabilidad por cliente.
 
-**Hallazgo:** China es el mayor mercado en revenue total. Sin embargo, varios países del top 10 presentan ticket promedio mayor: Australia (65.26), United Kingdom (64.67), South Korea (60.82), Spain (60.53), Brasil (60.22), France (59.92). Conclusión: volumen alto no equivale a mayor rentabilidad por cliente.
-
----
-
-#### Query 6 — Análisis por marca ✅
-
-**Pregunta:** ¿Existen marcas que concentran la fidelidad de los clientes?
-
-sql
-
-```sql
-SELECT p.brand AS marca, p.department AS genero_marca, SUM(o.sale_price) AS total, COUNT(p.brand) AS cantidad, AVG(o.sale_price) AS promedio
-FROM `projecto-curseradata.case_study.order_items` o
-INNER JOIN `projecto-curseradata.case_study.products` p ON o.product_id = p.id
-WHERE o.status = 'Complete'
-AND o.created_at >= '2024-01-01'
+Query 6 — Análisis por marca ✅
+Pregunta: ¿Existen marcas que concentran la fidelidad de los clientes?
+sqlSELECT p.brand AS marca,
+p.department AS genero_marca,
+SUM(oi.sale_price) AS total,
+COUNT(oi.order_id) AS cantidad,
+AVG(oi.sale_price) AS promedio
+FROM `projecto-curseradata.case_study.order_items` oi
+INNER JOIN `projecto-curseradata.case_study.products` p ON oi.product_id = p.id
+WHERE oi.status = 'Complete'
+AND oi.created_at >= '2024-01-01'
 GROUP BY p.brand, p.department
 ORDER BY cantidad DESC;
-```
+Hallazgo: El análisis demuestra que las marcas de hombre dominan las ventas: Calvin Klein, Carhartt, Quiksilver, Náutica, Volcom, Diesel, Dockers, Hanes. Se destaca Allegra K como marca unisex. Marcas como Diesel con ticket promedio de $143 demuestran que se puede lograr fidelización incluso con volumen de ventas menor, en contraste con Allegra K cuyo ticket promedio es de $12.97.
 
-**Hallazgo:** El análisis demuestra que las marcas de hombre dominan las ventas: Calvin Klein, Carhartt, Quiksilver, Náutica, Volcom, Diesel, Dockers, Hanes. Se destaca Allegra K como marca unisex. Marcas como Diesel con ticket promedio de $143 demuestran que se puede lograr fidelización incluso con volumen de ventas menor, en contraste con Allegra K cuyo ticket promedio es de $12.97.
-
----
-
-#### Conclusión general de la Fase ANALYZE
-
+Conclusión general de la Fase ANALYZE
 El análisis demuestra que la fidelidad de un cliente no puede medirse con una sola dimensión. El modelo RFM provee un marco más completo y accionable. La revisión metodológica permitió corregir errores conceptuales y enriquecer el análisis con métricas de revenue, ticket promedio y segmentación por género, país y marca.
+Hallazgo clave de retención: 17.416 clientes compraron una sola vez en el último año, frente a solo 13 clientes con frecuencia 4. Aplicando los tres criterios RFM simultáneamente bajo el Tier 1 (Champions), solo 5 clientes (0.03%) son verdaderamente fieles. El negocio tiene un problema crítico de retención, no de adquisición.
 
-**Hallazgo clave de retención:** 17.416 clientes compraron una sola vez en el último año, frente a solo 13 clientes con frecuencia 4. Aplicando los tres criterios RFM simultáneamente, solo 5 clientes (0.03%) son verdaderamente fieles. El negocio tiene un problema crítico de retención, no de adquisición.
-
----
-
-### FASE SHARE
-
-**Herramienta:** Looker Studio **Dashboard:** [https://datastudio.google.com/reporting/4e6cf671-9d4f-4e38-9233-8dec9c09cdac](https://datastudio.google.com/reporting/4e6cf671-9d4f-4e38-9233-8dec9c09cdac)
-
-#### Narrativa del dashboard
-
-**Personajes y escenario:** El equipo de marketing está preparando campañas para el año entrante y desea centrarse en los clientes fieles para lograr fidelización en más clientes.
-
-**Trama:** Necesitan saber qué hace a un cliente fiel y qué patrones tiene para diseñar campañas efectivas.
-
-**Gran revelación:** Los datos demuestran que para identificar a un cliente fiel se necesitan métricas RFM combinadas. El género masculino lidera en ticket promedio con un 11% más que el femenino, sin embargo entre los clientes verdaderamente fieles las mujeres dominan en cantidad (3 de 5) y en monetario total ($1.291 vs $758). A nivel geográfico China lidera en revenue total, pero Australia (65.26) y Reino Unido (64.67) destacan en ticket promedio. Solo el 0.03% de los clientes son verdaderamente fieles.
-
-**Momento ajá — Recomendaciones:**
-
+FASE SHARE
+Herramienta: Looker Studio
+Dashboard: https://datastudio.google.com/reporting/4e6cf671-9d4f-4e38-9233-8dec9c09cdac
+Narrativa del dashboard
+Personajes y escenario: El equipo de marketing está preparando campañas para el año entrante y desea centrarse en los clientes fieles para lograr fidelización en más clientes.
+Trama: Necesitan saber qué hace a un cliente fiel y qué patrones tiene para diseñar campañas efectivas.
+Gran revelación: Los datos demuestran que para identificar a un cliente fiel se necesitan métricas RFM combinadas. El género masculino lidera en ticket promedio con un 11% más que el femenino, sin embargo entre los clientes verdaderamente fieles las mujeres dominan en cantidad (3 de 5) y en monetario total ($1.291 vs $758). A nivel geográfico China lidera en revenue total, pero Australia (65.26) y Reino Unido (64.67) destacan en ticket promedio. Solo el 0.03% de los clientes son verdaderamente fieles bajo criterios Tier 1.
+Momento ajá — Recomendaciones:
 El análisis determinó que los clientes llegan a la plataforma no por marcas específicas. Se destacan Allegra K y Calvin Klein como las marcas más consumidas a nivel masivo y entre clientes fieles. Sin embargo los clientes fieles compran marcas variadas, lo que indica lealtad a la plataforma y no a una marca.
-
 Por lo tanto se recomienda:
 
-1. Filtrar por RFM para detectar y monitorear clientes fieles reales
-2. Centrar campañas de marketing diferenciadas por género, priorizando al género femenino como segmento con mayor potencial de fidelización
-3. Implementar programa de fidelización a nivel de plataforma: descuento en segunda compra con el objetivo de reducir el porcentaje de clientes con frecuencia 1 del 90% actual, descuentos de comunidad y promociones de temporada
-4. Dar atención prioritaria a mercados con ticket promedio alto como Australia y Reino Unido más allá del volumen
+Filtrar por RFM para detectar y monitorear clientes fieles reales
+Centrar campañas de marketing diferenciadas por género, priorizando al género femenino como segmento con mayor potencial de fidelización
+Implementar programa de fidelización a nivel de plataforma: descuento en segunda compra con el objetivo de reducir el porcentaje de clientes con frecuencia 1 del 90% actual, descuentos de comunidad y promociones de temporada
+Dar atención prioritaria a mercados con ticket promedio alto como Australia y Reino Unido más allá del volumen
 
----
 
-### TRABAJO FUTURO
+TRABAJO FUTURO
 
-- Segmentación RFM con scoring 1-5 por dimensión
-- Análisis de cohortes para medir retención en el tiempo
-- LTV (Lifetime Value) por segmento de cliente
-- Validación estadística de diferencias entre segmentos
-- Dashboard en Tableau y Power BI
+Niveles de fidelidad (Tiers): Implementar segmentación en tres niveles con umbrales progresivos adaptados a la industria de indumentaria:
 
----
+Tier 1 — Champions: F >= 4, R <= 60 días, M > $59.96
+Tier 2 — Leales: F >= 2, R <= 90 días, M > $59.96
+Tier 3 — Potenciales: F >= 2, R <= 180 días, cualquier M
 
-### Uso de Inteligencia Artificial en el proyecto
 
-**Herramienta principal:** Claude (Anthropic) **Curso de referencia:** Google Aspectos Básicos de Prompting — Fundación Compromiso
+CTEs (Common Table Expressions): Reescribir las queries con subqueries usando la cláusula WITH para mayor modularidad y legibilidad. Técnica no vista en el certificado de Google, identificada como próximo nivel de desarrollo técnico.
+Análisis de cohortes para medir retención en el tiempo
+LTV (Lifetime Value) por segmento de cliente
+Validación estadística de diferencias entre segmentos
+Dashboard en Tableau y Power BI
 
----
 
-#### Metodología de uso
+Uso de Inteligencia Artificial en el proyecto
+Herramienta principal: Claude (Anthropic)
+Curso de referencia: Google Aspectos Básicos de Prompting — Fundación Compromiso
 
+Metodología de uso
 La IA fue utilizada como guía metodológica mediante diálogo socrático. El proceso consistió en preguntas orientadoras por parte de la IA y resolución independiente por parte del analista.
+Principios aplicados:
 
-**Principios aplicados:**
+La IA no generó queries ni conclusiones directamente
+Todas las decisiones técnicas y de negocio fueron tomadas por el analista
+La IA fue utilizada para validar razonamiento, no para reemplazarlo
+El análisis fue sometido a revisión crítica externa y las mejoras fueron incorporadas con criterio propio
 
-- La IA no generó queries ni conclusiones directamente
-- Todas las decisiones técnicas y de negocio fueron tomadas por el analista
-- La IA fue utilizada para validar razonamiento, no para reemplazarlo
-- El análisis fue sometido a revisión crítica externa y las mejoras fueron incorporadas con criterio propio
 
----
-
-#### Práctica 1 — Prompting con contexto estructurado
-
+Práctica 1 — Prompting con contexto estructurado
 Una de las lecciones más importantes de este proyecto fue la importancia de proveer contexto estructurado y completo a la IA antes de iniciar cada sesión de trabajo.
+Por qué importa: Una IA con contexto insuficiente genera respuestas genéricas. Una IA con contexto estructurado actúa como un guía metodológico que conoce el proyecto, sus limitaciones y sus objetivos. La calidad del output de la IA es directamente proporcional a la calidad del contexto que se le provee.
 
-**Por qué importa:** Una IA con contexto insuficiente genera respuestas genéricas. Una IA con contexto estructurado actúa como un guía metodológico que conoce el proyecto, sus limitaciones y sus objetivos. La calidad del output de la IA es directamente proporcional a la calidad del contexto que se le provee.
+Analogía: Es como llevar un vehículo al mecánico. No es lo mismo decirle "tengo que cambiar una rueda" que decirle "tengo un problema eléctrico". El mecánico tiene las mismas capacidades en ambos casos, pero el contexto define qué herramientas usa y qué solución puede ofrecer. Con la IA ocurre exactamente lo mismo.
 
-> **Analogía:** Es como llevar un vehículo al mecánico. No es lo mismo decirle "tengo que cambiar una rueda" que decirle "tengo un problema eléctrico". El mecánico tiene las mismas capacidades en ambos casos, pero el contexto define qué herramientas usa y qué solución puede ofrecer. Con la IA ocurre exactamente lo mismo.
 
----
-
-#### Práctica 2 — Validación cruzada entre modelos de IA
-
+Práctica 2 — Validación cruzada entre modelos de IA
 El análisis fue sometido a revisión utilizando un modelo de IA diferente al utilizado durante el desarrollo. Esta práctica permitió identificar 5 deficiencias metodológicas que no habían sido detectadas durante la construcción.
+Por qué importa: Cada modelo tiene sesgos y fortalezas distintas. La validación cruzada actúa como una revisión por pares, aumentando la robustez del análisis.
 
-**Por qué importa:** Cada modelo tiene sesgos y fortalezas distintas. La validación cruzada actúa como una revisión por pares, aumentando la robustez del análisis.
-
----
-
-#### Práctica 3 — Criterio propio sobre el feedback de la IA
-
+Práctica 3 — Criterio propio sobre el feedback de la IA
 Durante el proyecto el análisis fue sometido a revisión crítica externa que identificó mejoras válidas pero fuera del alcance definido. La decisión de no aplicar todo el feedback fue consciente y documentada.
+Por qué importa: Usar IA con criterio propio significa también saber cuándo NO seguir sus sugerencias. Un portfolio que muestra el nivel real del analista tiene más valor profesional que uno que simula un nivel que aún no se tiene.
 
-**Por qué importa:** Usar IA con criterio propio significa también saber cuándo NO seguir sus sugerencias. Un portfolio que muestra el nivel real del analista tiene más valor profesional que uno que simula un nivel que aún no se tiene.
+Competencias demostradas
 
----
+Prompting efectivo con contexto estructurado
+Uso ético y transparente de herramientas de IA
+Pensamiento crítico independiente del output de la IA
+Validación cruzada entre modelos como práctica de control de calidad
+Criterio propio para evaluar y filtrar feedback externo
 
-#### Competencias demostradas
 
-- Prompting efectivo con contexto estructurado
-- Uso ético y transparente de herramientas de IA
-- Pensamiento crítico independiente del output de la IA
-- Validación cruzada entre modelos como práctica de control de calidad
-- Criterio propio para evaluar y filtrar feedback externo
+Aprendizaje y mejora continua
+Deficiencias identificadas y corregidas
+DeficienciaDescripciónEstadoDefinición incompleta de fidelidadSolo se midió F, omitiendo R y M✅ Corregido — Query RFM + SegmentaciónError conceptual en Query 3HAVING operaba a nivel de producto, no de cliente✅ Corregido — Query 3 v2Ausencia de métricas de revenueAnálisis basado en volumen sin sale_price✅ Corregido — Query 5 v2Conclusión geográfica sin respaldoHipótesis sobre China basada en conocimiento general✅ Corregido — Query 5 v2Análisis de género superficialSolo volumen sin ticket promedio ni categorías✅ Corregido — Query 4 ampliadaAlias inconsistentes en SQLMismo alias usado para tablas distintas en diferentes queries✅ Corregido — estandarización o para orders, oi para order_items
+Aprendizajes metodológicos
+Sesgo de confirmación: Un resultado que no da error no significa que sea correcto. Tendemos a aceptar resultados que confirman lo que esperamos ver. La validación metodológica es tan importante como escribir la query.
+Problema de retención: El análisis reveló que 17.416 clientes compraron una sola vez frente a 13 con frecuencia 4. Aplicando criterios RFM Tier 1 simultáneos, solo 5 clientes califican como verdaderamente fieles. El negocio tiene un problema crítico de retención, no de adquisición.
+Umbrales RFM y contexto de negocio: Los criterios del Tier 1 son estrictos para la industria de indumentaria general, donde 2 o 3 compras anuales ya representa buena retención. El 0.03% debe interpretarse como un indicador de alerta, no como una métrica absoluta. La implementación de Tiers progresivos permitirá una segmentación más matizada.
+Aprendizaje clave
 
----
-
-### Aprendizaje y mejora continua
-
-#### Deficiencias identificadas y corregidas
-
-|Deficiencia|Descripción|Estado|
-|---|---|---|
-|Definición incompleta de fidelidad|Solo se midió F, omitiendo R y M|✅ Corregido — Query RFM + Segmentación|
-|Error conceptual en Query 3|HAVING operaba a nivel de producto, no de cliente|✅ Corregido — Query 3 v2|
-|Ausencia de métricas de revenue|Análisis basado en volumen sin `sale_price`|✅ Corregido — Query 5 v2|
-|Conclusión geográfica sin respaldo|Hipótesis sobre China basada en conocimiento general|✅ Corregido — Query 5 v2|
-|Análisis de género superficial|Solo volumen sin ticket promedio ni categorías|✅ Corregido — Query 4 ampliada|
-
-#### Aprendizajes metodológicos
-
-**Sesgo de confirmación:** Un resultado que no da error no significa que sea correcto. Tendemos a aceptar resultados que confirman lo que esperamos ver. La validación metodológica es tan importante como escribir la query.
-
-**Problema de retención:** El análisis reveló que 17.416 clientes compraron una sola vez frente a 13 con frecuencia 4. Aplicando criterios RFM simultáneos, solo 5 clientes califican como verdaderamente fieles. El negocio tiene un problema crítico de retención, no de adquisición.
-
-#### Aprendizaje clave
-
-> Un portfolio que documenta errores identificados, investiga soluciones más allá del contenido visto y los corrige con criterio propio tiene mayor valor profesional que uno que solo muestra resultados perfectos. La mejora continua y la honestidad metodológica son competencias centrales de un analista de datos.
+Un portfolio que documenta errores identificados, investiga soluciones más allá del contenido visto y los corrige con criterio propio tiene mayor valor profesional que uno que solo muestra resultados perfectos. La mejora continua y la honestidad metodológica son competencias centrales de un analista de datos.
