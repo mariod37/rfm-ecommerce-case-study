@@ -51,7 +51,9 @@ Tipos de datos en columnas de precios
 TablaColumnaTipoEstadoproductscostFLOAT✅ Correctoorder_itemssale_priceFLOAT✅ Correcto
 Compatibilidad de claves para JOIN
 TablaColumnaTipoEstadoproductsidINTEGER✅ Compatibleorder_itemsproduct_idINTEGER✅ Compatible
-
+"Durante el análisis se detectó que order_items presenta ítems de la misma order_id con fechas created_at distintas, 
+lo que sugiere un problema de calidad del dato en el dataset sintético. 
+En producción esto requeriría investigación antes de cualquier análisis temporal."
 Conclusiones
 
 Las columnas críticas no presentan valores nulos
@@ -63,7 +65,9 @@ Los datos están listos para la Fase ANALYZE
 
 FASE ANALYZE — Documentación completa
 
-⚠️ Nota de revisión: El análisis inicial fue revisado en base a feedback técnico externo. Se identificaron mejoras metodológicas importantes. Las queries corregidas se documentan junto a sus versiones originales para transparencia metodológica.
+⚠️ Nota de revisión: El análisis inicial fue revisado en base a feedback técnico externo. 
+Se identificaron mejoras metodológicas importantes. 
+Las queries corregidas se documentan junto a sus versiones originales para transparencia metodológica.
 
 
 KPIs Generales
@@ -87,7 +91,9 @@ GROUP BY o.user_id
 ORDER BY cantidad_de_compras DESC;
 Hallazgo: Los clientes con mayor frecuencia de compra realizaron hasta 4 órdenes en el último año.
 
-⚠️ Limitación identificada: Esta query mide únicamente la dimensión F (Frecuencia) del modelo RFM. No considera recencia ni valor monetario, lo que puede sobrestimar la fidelidad de clientes con compras de bajo valor. Ver Query RFM para análisis completo.
+⚠️ Limitación identificada: Esta query mide únicamente la dimensión F (Frecuencia) del modelo RFM. 
+No considera recencia ni valor monetario, lo que puede sobrestimar la fidelidad de clientes con compras de bajo valor. 
+Ver Query RFM para análisis completo.
 
 
 Query RFM — Modelo de fidelidad completo ✅
